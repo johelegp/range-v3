@@ -63,7 +63,7 @@ namespace ranges
             CPP_def
             (
                 template(typename T)
-                concept PairLikeGCCBugs2_,
+                concept PairLikeGCCBugs3_,
                     requires(T t, tuple_element_fun_t<0, T> p0, tuple_element_fun_t<1, T> p1)
                     (
                         p0( get<0>(t) ),
@@ -73,9 +73,16 @@ namespace ranges
             CPP_def
             (
                 template(typename T)
-                concept PairLikeGCCBugs_,
+                concept PairLikeGCCBugs2_,
                     DerivedFrom<std::tuple_size<T>, meta::size_t<2>> &&
-                    PairLikeGCCBugs2_<T>
+                    PairLikeGCCBugs3_<T>
+            );
+            CPP_def
+            (
+                template(typename T)
+                concept PairLikeGCCBugs_,
+                    ranges::defer::Type<meta::_t<std::tuple_size<T>>> &&
+                    defer::PairLikeGCCBugs2_<T>
             );
             CPP_def
             (
@@ -283,6 +290,7 @@ namespace ranges
                 RANGES_EXPECT(last_() - first_() == n);
             }
 
+#if !defined(__clang__) || __clang_major__ > 3
             template<typename R>
             constexpr CPP_ctor(subrange)(R&& r) (
                 requires detail::defer::NotSameAs_<R, subrange> &&
@@ -317,6 +325,43 @@ namespace ranges
                     RANGES_EXPECT(n == ranges::distance(r));
                 }
             }
+#else
+            // BUGBUG clang-3.7 prefers a CPP_template here instead of a CPP_ctor
+            CPP_template(typename R)(
+                requires detail::defer::NotSameAs_<R, subrange> &&
+                    defer::ForwardingRange_<R> &&
+                    detail::defer::ConvertibleToNotSlicing_<iterator_t<R>, I> &&
+                    defer::ConvertibleTo<sentinel_t<R>, S> &&
+                    defer::True<!detail::store_size_<K, S, I>()>)
+            constexpr subrange(R&& r) 
+              : subrange{ranges::begin(r), ranges::end(r)}
+            {}
+
+            CPP_template(typename R)(
+                requires detail::defer::NotSameAs_<R, subrange> &&
+                    defer::ForwardingRange_<R> &&
+                    detail::defer::ConvertibleToNotSlicing_<iterator_t<R>, I> &&
+                    defer::ConvertibleTo<sentinel_t<R>, S> &&
+                    defer::True<detail::store_size_<K, S, I>()> &&
+                    defer::SizedRange<R>)
+            constexpr subrange(R&& r) 
+              : subrange{ranges::begin(r), ranges::end(r), ranges::distance(r)}
+            {}
+
+            CPP_template(typename R)(
+                requires defer::ForwardingRange_<R> &&
+                    detail::defer::ConvertibleToNotSlicing_<iterator_t<R>, I> &&
+                    defer::ConvertibleTo<sentinel_t<R>, S> &&
+                    defer::True<K == subrange_kind::sized>)
+            constexpr subrange(R&& r, iter_difference_t<I> n) 
+              : subrange{ranges::begin(r), ranges::end(r), n}
+            {
+                if RANGES_CONSTEXPR_IF ((bool) SizedRange<R>)
+                {
+                    RANGES_EXPECT(n == ranges::distance(r));
+                }
+            }
+#endif
 
             /// Implicit conversion to something that looks like a container.
             CPP_template(typename Container)(
