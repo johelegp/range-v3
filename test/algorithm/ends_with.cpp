@@ -37,10 +37,10 @@ int main()
                      random_access_iterator<const int*>(ia + as),
                      random_access_iterator<const int*>(ib),
                      random_access_iterator<const int*>(ib + bs)));
-    CHECK(!ends_with(random_access_iterator<const int*>(ia),
-                      sentinel<const int*, true>(ia + as),
-                      random_access_iterator<const int*>(ib),
-                      sentinel<const int*, true>(ib + bs - 1)));
+    CHECK(!ends_with(input_iterator<const int*>(ia),
+                      input_iterator<const int*, true>(ia + as),
+                      input_iterator<const int*>(ib),
+                      input_iterator<const int*, true>(ib + bs - 1)));
     CHECK(!ends_with(forward_iterator<const int*>(ia),
                       sentinel<const int*>(ia + as),
                       forward_iterator<const int*>(ib),
@@ -49,10 +49,10 @@ int main()
                       random_access_iterator<const int*>(ia + as)),
                       make_subrange(random_access_iterator<const int*>(ib),
                       random_access_iterator<const int*>(ib + bs - 1))));
-    CHECK(ends_with(make_subrange(random_access_iterator<const int*>(ia),
-                     sentinel<const int*, true>(ia + as)),
-                     make_subrange(random_access_iterator<const int*>(ib),
-                     sentinel<const int*, true>(ib + bs))));
+    CHECK(ends_with(make_subrange(input_iterator<const int*>(ia),
+                     input_iterator<const int*, true>(ia + as)),
+                     make_subrange(input_iterator<const int*>(ib),
+                     input_iterator<const int*, true>(ib + bs))));
     CHECK(ends_with(make_subrange(forward_iterator<const int*>(ia),
                      sentinel<const int*>(ia + as)),
                      make_subrange(forward_iterator<const int*>(ib),
@@ -65,10 +65,10 @@ int main()
                       counting_equals<int>));
     CHECK(comparison_count == 0);
     comparison_count = 0;
-    CHECK(ends_with(random_access_iterator<const int*>(ia),
-                     sentinel<const int*, true>(ia + as),
-                     random_access_iterator<const int*>(ib),
-                     sentinel<const int*, true>(ib + bs),
+    CHECK(ends_with(input_iterator<const int*>(ia),
+                     input_iterator<const int*, true>(ia + as),
+                     input_iterator<const int*>(ib),
+                     input_iterator<const int*, true>(ib + bs),
                      counting_equals<int>));
     CHECK(comparison_count > 0);
     comparison_count = 0;
@@ -86,10 +86,10 @@ int main()
                      counting_equals<int>));
     CHECK(comparison_count > 0);
     comparison_count = 0;
-    CHECK(!ends_with(make_subrange(random_access_iterator<const int*>(ib),
-                      sentinel<const int*, true>(ib + bs - 1)),
-                      make_subrange(random_access_iterator<const int*>(ib),
-                      sentinel<const int*, true>(ib + bs)),
+    CHECK(!ends_with(make_subrange(input_iterator<const int*>(ib),
+                      input_iterator<const int*, true>(ib + bs - 1)),
+                      make_subrange(input_iterator<const int*>(ib),
+                      input_iterator<const int*, true>(ib + bs)),
                       counting_equals<int>));
     CHECK(comparison_count == 0);
     comparison_count = 0;
