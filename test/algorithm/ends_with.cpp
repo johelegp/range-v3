@@ -100,10 +100,12 @@ int main()
                       counting_equals<int>));
     CHECK(comparison_count == 0);
 
+#if RANGES_CXX_CONSTEXPR >= RANGES_CXX_CONSTEXPR_14 && RANGES_CONSTEXPR_INVOKE
     using IL = std::initializer_list<int>;
     static_assert(ends_with(IL{0, 1, 2, 3, 4}, IL{3, 4}), "");
     static_assert(!ends_with(IL{0, 1, 2, 3, 4}, IL{2, 3}), "");
     static_assert(ends_with(IL{}, IL{}), "");
+#endif
 
     return ::test_result();
 }
