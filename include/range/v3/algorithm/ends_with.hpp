@@ -35,14 +35,14 @@ namespace ranges
         constexpr /*c++14*/ auto operator()(I0 begin0, S0 end0, I1 begin1, S1 end1,
                 C pred = C{}, P0 proj0 = P0{}, P1 proj1 = P1{}) const ->
             CPP_ret(bool)(
-                requires RandomAccessIterator<I0> && SizedSentinel<S0, I0> &&
+                requires ForwardIterator<I0> && SizedSentinel<S0, I0> &&
                     InputIterator<I1> && SizedSentinel<S1, I1> &&
                     IndirectlyComparable<I0, I1, C, P0, P1>)
         {
             const auto drop = distance(begin0, end0) - distance(begin1, end1);
             if (drop < 0)
                 return false;
-            return equal(std::move(begin0) + drop, std::move(end0), std::move(begin1),
+            return equal(next(std::move(begin0), drop), std::move(end0), std::move(begin1),
                 std::move(end1), std::move(pred), std::move(proj0), std::move(proj1));
         }
 
@@ -51,14 +51,14 @@ namespace ranges
         constexpr /*c++14*/ auto operator()(Rng0 &&rng0, Rng1 &&rng1, C pred = C{},
                 P0 proj0 = P0{}, P1 proj1 = P1{}) const ->
             CPP_ret(bool)(
-                requires RandomAccessRange<Rng0> && SizedRange<Rng0> &&
+                requires ForwardRange<Rng0> && SizedRange<Rng0> &&
                     InputRange<Rng1> && SizedRange<Rng1> &&
                     IndirectlyComparable<iterator_t<Rng0>, iterator_t<Rng1>, C, P0, P1>)
         {
             const auto drop = distance(rng0) - distance(rng1);
             if (drop < 0)
                 return false;
-            return equal(begin(rng0) + drop, end(rng0), begin(rng1), end(rng1),
+            return equal(next(begin(rng0), drop), end(rng0), begin(rng1), end(rng1),
                 std::move(pred), std::move(proj0), std::move(proj1));
         }
     };
