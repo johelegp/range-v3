@@ -58,13 +58,13 @@ namespace ranges
             }                                                                                   \
             CPP_template(typename X, typename Y)(                                               \
                 requires ConvertibleTo<T1 const &, X> && ConvertibleTo<T2 const &, Y>)          \
-            operator C<X, Y>() const &                                                          \
+            constexpr operator C<X, Y>() const &                                                \
             {                                                                                   \
                 return {value, M1, M2};                                                         \
             }                                                                                   \
             CPP_template(typename X, typename Y)(                                               \
                 requires ConvertibleTo<T1, X> && ConvertibleTo<T2, Y>)                          \
-            operator C<X, Y>() &&                                                               \
+            constexpr operator C<X, Y>() &&                                                     \
             {                                                                                   \
                 return {value, static_cast<T1 &&>(M1), static_cast<T2 &&>(M2)};                 \
             }                                                                                   \

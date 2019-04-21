@@ -15,26 +15,44 @@
 
 #include <utility>
 #include <concepts/concepts.hpp>
+#include <range/v3/algorithm/result_types.hpp>
 #include <range/v3/detail/config.hpp>
-#include <range/v3/algorithm/equal.hpp>
 #include <range/v3/functional/comparisons.hpp>
 #include <range/v3/functional/identity.hpp>
+#include <range/v3/functional/invoke.hpp>
 #include <range/v3/iterator/concepts.hpp>
 #include <range/v3/iterator/operations.hpp>
 #include <range/v3/range/access.hpp>
 #include <range/v3/range/concepts.hpp>
+#include <range/v3/range/dangling.hpp>
 
 namespace ranges
 {
     /// \addtogroup group-algorithms
     /// @{
+    template<typename I0, typename I1>
+    using ends_with_result = detail::bool_in1_in2_result<I0, I1>;
+
     struct ends_with_fn
     {
+    private:
+        template<typename I0, typename S0, typename I1, typename S1,
+            typename C, typename P0, typename P1>
+        constexpr /*c++14*/ ends_with_result<I0, I1> nocheck(
+            I0 begin0, S0 end0, I1 begin1, S1, C pred, P0 proj0, P1 proj1) const
+        {
+            for(; begin0 != end0; ++begin0, ++begin1)
+                if(!invoke(pred, invoke(proj0, *begin0), invoke(proj1, *begin1)))
+                    return {false, std::move(begin0), std::move(begin1)};
+            return {true, std::move(begin0), std::move(begin1)};
+        }
+
+    public:
         template<typename I0, typename S0, typename I1, typename S1, typename C = equal_to,
             typename P0 = identity, typename P1 = identity>
         constexpr /*c++14*/ auto operator()(I0 begin0, S0 end0, I1 begin1, S1 end1,
                 C pred = C{}, P0 proj0 = P0{}, P1 proj1 = P1{}) const ->
-            CPP_ret(bool)(
+            CPP_ret(ends_with_result<I0, I1>)(
                 requires ((ForwardIterator<I0> && Sentinel<S0, I0>) ||
                      (InputIterator<I0> && SizedSentinel<S0, I0>)) &&
                     ((ForwardIterator<I1> && Sentinel<S1, I1>) ||
@@ -43,8 +61,8 @@ namespace ranges
         {
             const auto drop = distance(begin0, end0) - distance(begin1, end1);
             if (drop < 0)
-                return false;
-            return equal(next(std::move(begin0), drop), std::move(end0), std::move(begin1),
+                return {false, std::move(begin0), std::move(begin1)};
+            return this->nocheck(next(std::move(begin0), drop), std::move(end0), std::move(begin1),
                 std::move(end1), std::move(pred), std::move(proj0), std::move(proj1));
         }
 
@@ -52,15 +70,15 @@ namespace ranges
             typename P1 = identity>
         constexpr /*c++14*/ auto operator()(Rng0 &&rng0, Rng1 &&rng1, C pred = C{},
                 P0 proj0 = P0{}, P1 proj1 = P1{}) const ->
-            CPP_ret(bool)(
+            CPP_ret(ends_with_result<safe_iterator_t<Rng0>, safe_iterator_t<Rng1>>)(
                 requires (ForwardRange<Rng0> || (InputRange<Rng0> && SizedRange<Rng0>)) &&
                     (ForwardRange<Rng1> || (InputRange<Rng1> && SizedRange<Rng1>)) &&
                     IndirectlyComparable<iterator_t<Rng0>, iterator_t<Rng1>, C, P0, P1>)
         {
             const auto drop = distance(rng0) - distance(rng1);
             if (drop < 0)
-                return false;
-            return equal(next(begin(rng0), drop), end(rng0), begin(rng1), end(rng1),
+                return {false, begin(rng0), begin(rng1)};
+            return this->nocheck(next(begin(rng0), drop), end(rng0), begin(rng1), end(rng1),
                 std::move(pred), std::move(proj0), std::move(proj1));
         }
     };

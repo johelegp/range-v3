@@ -11,8 +11,11 @@
 //
 
 #include <initializer_list>
+#include <concepts/concepts.hpp>
 #include <range/v3/algorithm/ends_with.hpp>
 #include <range/v3/iterator/operations.hpp>
+#include <range/v3/range/dangling.hpp>
+#include <range/v3/range_fwd.hpp>
 #include <range/v3/view/subrange.hpp>
 #include "../simple_test.hpp"
 #include "../test_iterators.hpp"
@@ -99,9 +102,49 @@ int main()
                       sentinel<const int*>(ib + bs)),
                       counting_equals<int>));
     CHECK(comparison_count == 0);
+    CHECK(ends_with(random_access_iterator<const int*>(ia),
+                     random_access_iterator<const int*>(ia + as),
+                     random_access_iterator<const int*>(ib),
+                     random_access_iterator<const int*>(ib + bs)) ==
+        ends_with_result<random_access_iterator<const int*>, random_access_iterator<const int*>>
+            {true, random_access_iterator<const int*>(ia + as),
+                random_access_iterator<const int*>(ib + bs)});
+    CHECK(ends_with(input_iterator<const int*>(ib),
+                     input_iterator<const int*, true>(ib + bs),
+                     input_iterator<const int*>(ia),
+                     input_iterator<const int*, true>(ia + as)) ==
+        ends_with_result<input_iterator<const int*>, input_iterator<const int*>>
+            {false, input_iterator<const int*>(ib), input_iterator<const int*>(ia)});
+    CHECK(ends_with(forward_iterator<const int*>(ia),
+                     sentinel<const int*>(ia + as),
+                     forward_iterator<const int*>(ib),
+                     sentinel<const int*>(ib + bs - 1)) ==
+        ends_with_result<forward_iterator<const int*>, forward_iterator<const int*>>
+            {false, forward_iterator<const int*>(ia + as - bs + 1),
+                forward_iterator<const int*>(ib)});
+    CHECK(ends_with(make_subrange(random_access_iterator<const int*>(ia),
+                     random_access_iterator<const int*>(ia + as)),
+                     make_subrange(random_access_iterator<const int*>(ib),
+                     random_access_iterator<const int*>(ib + bs - 1))) ==
+        ends_with_result<random_access_iterator<const int*>, random_access_iterator<const int*>>
+            {false, random_access_iterator<const int*>(ia + as - bs + 1),
+                random_access_iterator<const int*>(ib)});
+    CHECK(ends_with(make_subrange(input_iterator<const int*>(ia),
+                     input_iterator<const int*, true>(ia + as)),
+                     make_subrange(input_iterator<const int*>(ib),
+                     input_iterator<const int*, true>(ib + bs))) ==
+        ends_with_result<input_iterator<const int*>, input_iterator<const int*>>
+            {true, input_iterator<const int*>(ia + as), input_iterator<const int*>(ib + bs)});
+    CHECK(ends_with(make_subrange(forward_iterator<const int*>(ia),
+                     sentinel<const int*>(ia + as)),
+                     make_subrange(forward_iterator<const int*>(ib),
+                     sentinel<const int*>(ib + bs))) ==
+        ends_with_result<forward_iterator<const int*>, forward_iterator<const int*>>
+            {true, forward_iterator<const int*>(ia + as), forward_iterator<const int*>(ib + bs)});
 
 #if RANGES_CXX_CONSTEXPR >= RANGES_CXX_CONSTEXPR_14 && RANGES_CONSTEXPR_INVOKE
     using IL = std::initializer_list<int>;
+    static_assert(Same<decltype(ends_with(IL{}, IL{})), ends_with_result<dangling, dangling>>, "");
     static_assert(ends_with(IL{0, 1, 2, 3, 4}, IL{3, 4}), "");
     static_assert(!ends_with(IL{0, 1, 2, 3, 4}, IL{2, 3}), "");
     static_assert(ends_with(IL{}, IL{}), "");
