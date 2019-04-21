@@ -51,6 +51,39 @@ namespace ranges
             }                                                                                   \
             /**/
 
+        #define RANGES_ALGO_RESULT_AUX_BOOL_2(C, T1, M1, T2, M2)                                \
+            constexpr explicit operator bool() const noexcept                                   \
+            {                                                                                   \
+                return value;                                                                   \
+            }                                                                                   \
+            CPP_template(typename X, typename Y)(                                               \
+                requires ConvertibleTo<T1 const &, X> && ConvertibleTo<T2 const &, Y>)          \
+            operator C<X, Y>() const &                                                          \
+            {                                                                                   \
+                return {value, M1, M2};                                                         \
+            }                                                                                   \
+            CPP_template(typename X, typename Y)(                                               \
+                requires ConvertibleTo<T1, X> && ConvertibleTo<T2, Y>)                          \
+            operator C<X, Y>() &&                                                               \
+            {                                                                                   \
+                return {value, static_cast<T1 &&>(M1), static_cast<T2 &&>(M2)};                 \
+            }                                                                                   \
+            CPP_broken_friend_member                                                            \
+            friend constexpr auto operator==(C<T1, T2> const &x, C<T1, T2> const &y) ->         \
+                CPP_broken_friend_ret(bool)(                                                    \
+                    requires EqualityComparable<T1> && EqualityComparable<T2>)                  \
+            {                                                                                   \
+                return x.value == y.value && x.M1 == y.M1 && x.M2 == y.M2;                      \
+            }                                                                                   \
+            CPP_broken_friend_member                                                            \
+            friend constexpr auto operator!=(C<T1, T2> const &x, C<T1, T2> const &y) ->         \
+                CPP_broken_friend_ret(bool)(                                                    \
+                    requires EqualityComparable<T1> && EqualityComparable<T2>)                  \
+            {                                                                                   \
+                return !(x == y);                                                               \
+            }                                                                                   \
+            /**/
+
         #define RANGES_ALGO_RESULT_AUX_3(C, T1, M1, T2, M2, T3, M3)                             \
             CPP_template(typename X, typename Y, typename Z)(                                   \
                 requires ConvertibleTo<T1 const &, X> && ConvertibleTo<T2 const &, Y> &&        \
@@ -109,6 +142,16 @@ namespace ranges
             I2 in2;
 
             RANGES_ALGO_RESULT_AUX_2(in1_in2_result, I1, in1, I2, in2)
+        };
+
+        template<typename I1, typename I2>
+        struct bool_in1_in2_result
+        {
+            bool value;
+            I1 in1;
+            I2 in2;
+
+            RANGES_ALGO_RESULT_AUX_BOOL_2(bool_in1_in2_result, I1, in1, I2, in2)
         };
 
         template<typename I, typename Fun>
